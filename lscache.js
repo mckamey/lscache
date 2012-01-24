@@ -61,7 +61,7 @@ var lscache = function() {
       cachedStorage = false;
     }
     return cachedStorage;
-    }
+  }
 
   // Determines if native JSON (de-)serialization is supported in the browser.
   function supportsJSON() {
@@ -194,14 +194,19 @@ var lscache = function() {
     /**
      * Retrieves specified value from localStorage, if not expired.
      * @param {string} key
+     * @param {boolean} allowOffline allow expired items if offline
      * @return {string|Object}
      */
-    get: function(key) {
+    get: function(key, allowOffline) {
       if (!supportsStorage()) return null;
+
+      // if navigator is offline and allowOffline is set then don't remove expired items
+      // NOTE: must ensure navigator.onLine is boolean and not just undefined
+      var expungeExpired = (!allowOffline) || (navigator.onLine !== false);
 
       // Return the de-serialized item if not expired
       var exprKey = expirationKey(key);
-      var expr = getItem(exprKey);
+      var expr = expungeExpired ? getItem(exprKey) : null;
 
       if (expr) {
         var expirationTime = parseInt(expr, EXPIRY_RADIX);
